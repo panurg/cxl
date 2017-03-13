@@ -1,0 +1,5 @@
+cmake_minimum_required (VERSION 3.0)
+project (cxl VERSION 0.1.0)
+find_package(X11 REQUIRED COMPONENTS Xkbfile)
+add_executable(${PROJECT_NAME} cxl.c)
+target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES} ${X11_Xkbfile_LIB})
