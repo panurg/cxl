@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     XkbRF_VarDefsRec vd;
     XkbStateRec state;
     char *groups[XkbNumKbdGroups];
-    unsigned char num_groups = 0;
+    char **tmp = groups;
     char *display_name = NULL;
     Display *display = NULL;
     if (!(display = XOpenDisplay(display_name))) {
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "failed to get layout names\n");
         goto out_close_display;
     }
-    while ((groups[num_groups] = strsep(&vd.layout, DELIMETER))) num_groups++;
+    while ((*(tmp++) = strsep(&vd.layout, DELIMETER)));
     if (XkbGetState(display, XkbUseCoreKbd, &state) == Success)
         fprintf(stdout, LAYOUT_FORMAT, groups[state.locked_group]);
     else
