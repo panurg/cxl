@@ -8,6 +8,13 @@
 #define DELIMETER ","
 #define LAYOUT_FORMAT "%s\r\n"
 
+static void print_usage()
+{
+    fprintf(stdout, "usage: cxl [options]\n");
+    fprintf(stdout, "Options:\n");
+    fprintf(stdout, "  -h\tThis message.\n");
+}
+
 int main(int argc, char *argv[])
 {
     int rc = EXIT_FAILURE;
@@ -18,6 +25,17 @@ int main(int argc, char *argv[])
     char **tmp = groups;
     char *display_name = NULL;
     Display *display = NULL;
+    int opt = 0;
+    while ((opt = getopt(argc, argv, "h")) != -1) {
+        switch (opt) {
+        case 'h':
+            rc = EXIT_SUCCESS;
+            /* fall through */
+        default:
+            print_usage();
+            goto out;
+        }
+    }
     if (!(display = XOpenDisplay(display_name))) {
         fprintf(stderr, "failed to open display\n");
         goto out;
