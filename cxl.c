@@ -18,22 +18,32 @@ int main(int argc, char *argv[])
     unsigned char num_groups = 0;
     char *display_name = NULL;
     Display *display = NULL;
-    if (!(display = XOpenDisplay(display_name)))
+    if (!(display = XOpenDisplay(display_name))) {
+        fprintf(stderr, "failed to open display\n");
         goto out;
+    }
     if (XkbSelectEventDetails(display,
                               XkbUseCoreKbd,
                               XkbStateNotify,
                               XkbGroupLockMask,
-                              XkbGroupLockMask) != True)
+                              XkbGroupLockMask) != True) {
+        fprintf(stderr, "failed to select layout change event\n");
         goto out_close_display;
-    if (XkbRF_GetNamesProp(display, NULL, &vd) != True)
+    }
+    if (XkbRF_GetNamesProp(display, NULL, &vd) != True) {
+        fprintf(stderr, "failed to get layout names\n");
         goto out_close_display;
+    }
     while ((groups[num_groups] = strsep(&vd.layout, DELIMETER))) num_groups++;
     if (XkbGetState(display, XkbUseCoreKbd, &state) == Success)
-        printf(LAYOUT_FORMAT, groups[state.locked_group]);
+        fprintf(stdout, LAYOUT_FORMAT, groups[state.locked_group]);
+    else
+        fprintf(stderr, "failed to get current keyboard state\n");
     while (1)
         if (XNextEvent(display, &event.core) == Success)
-            printf(LAYOUT_FORMAT, groups[event.state.locked_group]);
+            fprintf(stdout, LAYOUT_FORMAT, groups[event.state.locked_group]);
+        else
+            fprintf(stderr, "failed to get next event\n");
 
     XFree(vd.model);
     XFree(vd.layout);
