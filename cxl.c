@@ -14,11 +14,18 @@ static void literal_prt(int grp_num, void *ctxt)
     fprintf(stdout, "%s\n", ((char**)ctxt)[grp_num]);
 }
 
+static void num_prt(int grp_num, void *ctxt)
+{
+    fprintf(stdout, "%d\n", grp_num);
+}
+
 static void print_usage()
 {
     fprintf(stdout, "usage: cxl [options]\n");
     fprintf(stdout, "Options:\n");
     fprintf(stdout, "  -d\tPrint current layout and exit (dump).\n");
+    fprintf(stdout, "  -l\tPrint name of layout (default).\n");
+    fprintf(stdout, "  -n\tPrint number of layout.\n");
     fprintf(stdout, "  -h\tThis message.\n");
 }
 
@@ -52,10 +59,16 @@ int main(int argc, char *argv[])
     int opt = 0;
     int dump = 0;
     printer_t *printer = literal_prt;
-    while ((opt = getopt(argc, argv, "dh")) != -1) {
+    while ((opt = getopt(argc, argv, "dlnh")) != -1) {
         switch (opt) {
         case 'd':
             dump = 1;
+            break;
+        case 'l':
+            printer = literal_prt;
+            break;
+        case 'n':
+            printer = num_prt;
             break;
         case 'h':
             rc = EXIT_SUCCESS;
