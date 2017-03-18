@@ -6,19 +6,43 @@
 #include <X11/extensions/XKBrules.h>
 
 #define DELIMETER ","
-#define LAYOUT_FORMAT "%s\r\n"
+
+typedef void (printer_t)(int grp_num, void *ctxt);
+
+static void literal_prt(int grp_num, void *ctxt)
+{
+    fprintf(stdout, "%s\n", ((char**)ctxt)[grp_num]);
+}
 
 static void print_usage()
 {
     fprintf(stdout, "usage: cxl [options]\n");
     fprintf(stdout, "Options:\n");
+    fprintf(stdout, "  -d\tPrint current layout and exit (dump).\n");
     fprintf(stdout, "  -h\tThis message.\n");
+}
+
+static void monitor_events(Display *dpy, printer_t *prt, void *prt_ctxt)
+{
+    XkbEvent event;
+    if (XkbSelectEventDetails(dpy,
+                              XkbUseCoreKbd,
+                              XkbStateNotify,
+                              XkbGroupLockMask,
+                              XkbGroupLockMask) == True) {
+        while (1)
+            if (XNextEvent(dpy, &event.core) == Success)
+                prt(event.state.locked_group, prt_ctxt);
+            else
+                fprintf(stderr, "failed to get next event\n");
+    } else {
+        fprintf(stderr, "failed to select layout change event\n");
+    }
 }
 
 int main(int argc, char *argv[])
 {
     int rc = EXIT_FAILURE;
-    XkbEvent event;
     XkbRF_VarDefsRec vd;
     XkbStateRec state;
     char *groups[XkbNumKbdGroups];
@@ -26,8 +50,13 @@ int main(int argc, char *argv[])
     char *display_name = NULL;
     Display *display = NULL;
     int opt = 0;
-    while ((opt = getopt(argc, argv, "h")) != -1) {
+    int dump = 0;
+    printer_t *printer = literal_prt;
+    while ((opt = getopt(argc, argv, "dh")) != -1) {
         switch (opt) {
+        case 'd':
+            dump = 1;
+            break;
         case 'h':
             rc = EXIT_SUCCESS;
             /* fall through */
@@ -40,28 +69,16 @@ int main(int argc, char *argv[])
         fprintf(stderr, "failed to open display\n");
         goto out;
     }
-    if (XkbSelectEventDetails(display,
-                              XkbUseCoreKbd,
-                              XkbStateNotify,
-                              XkbGroupLockMask,
-                              XkbGroupLockMask) != True) {
-        fprintf(stderr, "failed to select layout change event\n");
-        goto out_close_display;
-    }
     if (XkbRF_GetNamesProp(display, NULL, &vd) != True) {
         fprintf(stderr, "failed to get layout names\n");
         goto out_close_display;
     }
     while ((*(tmp++) = strsep(&vd.layout, DELIMETER)));
     if (XkbGetState(display, XkbUseCoreKbd, &state) == Success)
-        fprintf(stdout, LAYOUT_FORMAT, groups[state.locked_group]);
+        printer(state.locked_group, groups);
     else
         fprintf(stderr, "failed to get current keyboard state\n");
-    while (1)
-        if (XNextEvent(display, &event.core) == Success)
-            fprintf(stdout, LAYOUT_FORMAT, groups[event.state.locked_group]);
-        else
-            fprintf(stderr, "failed to get next event\n");
+    if (!dump) monitor_events(display, printer, groups);
 
     XFree(vd.model);
     XFree(vd.layout);
