@@ -12,6 +12,7 @@ static void print_usage()
 {
     fprintf(stdout, "usage: cxl [options]\n");
     fprintf(stdout, "Options:\n");
+    fprintf(stdout, "  -d\tPrint current layout and exit (dump).\n");
     fprintf(stdout, "  -h\tThis message.\n");
 }
 
@@ -26,8 +27,12 @@ int main(int argc, char *argv[])
     char *display_name = NULL;
     Display *display = NULL;
     int opt = 0;
-    while ((opt = getopt(argc, argv, "h")) != -1) {
+    int done = 0;
+    while ((opt = getopt(argc, argv, "dh")) != -1) {
         switch (opt) {
+        case 'd':
+            done = 1;
+            break;
         case 'h':
             rc = EXIT_SUCCESS;
             /* fall through */
@@ -40,14 +45,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "failed to open display\n");
         goto out;
     }
-    if (XkbSelectEventDetails(display,
-                              XkbUseCoreKbd,
-                              XkbStateNotify,
-                              XkbGroupLockMask,
-                              XkbGroupLockMask) != True) {
-        fprintf(stderr, "failed to select layout change event\n");
-        goto out_close_display;
-    }
     if (XkbRF_GetNamesProp(display, NULL, &vd) != True) {
         fprintf(stderr, "failed to get layout names\n");
         goto out_close_display;
@@ -57,7 +54,15 @@ int main(int argc, char *argv[])
         fprintf(stdout, LAYOUT_FORMAT, groups[state.locked_group]);
     else
         fprintf(stderr, "failed to get current keyboard state\n");
-    while (1)
+    if (!done && XkbSelectEventDetails(display,
+                                       XkbUseCoreKbd,
+                                       XkbStateNotify,
+                                       XkbGroupLockMask,
+                                       XkbGroupLockMask) != True) {
+        fprintf(stderr, "failed to select layout change event\n");
+        goto out_close_display;
+    }
+    while (!done)
         if (XNextEvent(display, &event.core) == Success)
             fprintf(stdout, LAYOUT_FORMAT, groups[event.state.locked_group]);
         else
