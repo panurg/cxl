@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 #include <X11/extensions/XKBrules.h>
@@ -23,10 +24,11 @@ static void print_usage()
 {
     fprintf(stdout, "usage: cxl [options]\n");
     fprintf(stdout, "Options:\n");
-    fprintf(stdout, "  -d\tPrint current layout and exit (dump).\n");
-    fprintf(stdout, "  -l\tPrint name of layout (default).\n");
-    fprintf(stdout, "  -n\tPrint number of layout.\n");
-    fprintf(stdout, "  -h\tThis message.\n");
+    fprintf(stdout, "  -d\t\tPrint current layout and exit (dump).\n");
+    fprintf(stdout, "  -l\t\tPrint name of layout (default).\n");
+    fprintf(stdout, "  -n\t\tPrint number of layout.\n");
+    fprintf(stdout, "  -D display\tSpecify display name to use.\n");
+    fprintf(stdout, "  -h\t\tThis message.\n");
 }
 
 static void monitor_events(Display *dpy, printer_t *prt, void *prt_ctxt)
@@ -59,7 +61,7 @@ int main(int argc, char *argv[])
     int opt = 0;
     int dump = 0;
     printer_t *printer = literal_prt;
-    while ((opt = getopt(argc, argv, "dlnh")) != -1) {
+    while ((opt = getopt(argc, argv, "dlnD:h")) != -1) {
         switch (opt) {
         case 'd':
             dump = 1;
@@ -69,6 +71,9 @@ int main(int argc, char *argv[])
             break;
         case 'n':
             printer = num_prt;
+            break;
+        case 'D':
+            display_name = optarg;
             break;
         case 'h':
             rc = EXIT_SUCCESS;
