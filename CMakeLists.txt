@@ -3,3 +3,29 @@ project (cxl VERSION 0.1.0)
 find_package(X11 REQUIRED COMPONENTS Xkbfile)
 add_executable(${PROJECT_NAME} cxl.c)
 target_link_libraries(${PROJECT_NAME} ${X11_LIBRARIES} ${X11_Xkbfile_LIB})
+include(GNUInstallDirs)
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+find_program(A2X NAMES a2x a2x.py)
+find_program(BZIP2 bzip2)
+set(ENV{${PROJECT_NAME}_VERSION} ${CMAKE_VERSION})
+set(A2X_OPTS -f manpage
+             -D ${CMAKE_CURRENT_BINARY_DIR}
+)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.1
+    COMMAND ${A2X} ${A2X_OPTS} ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.1.txt
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.1.txt
+    VERBATIM
+)
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.1.bz2
+    COMMAND ${BZIP2} -f ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.1
+    DEPENDS ${PROJECT_NAME}.1
+    COMMENT "Compressing ${PROJECT_NAME}.1"
+    VERBATIM
+)
+add_custom_target(man ALL DEPENDS ${PROJECT_NAME}.1.bz2)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.1.bz2 DESTINATION ${CMAKE_INSTALL_MANDIR})
+set(CPACK_GENERATOR "DEB;RPM;TBZ2")
+set(CPACK_PACKAGE_CONTACT "Alexander Abrosimov")
+include(CPack)
