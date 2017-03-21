@@ -1,21 +1,24 @@
-CXL(1)
-======
+{cmd}(1)
+========
 :doctype: manpage
-:man source: cxl
-:man version: {sys:echo $cxl_VERSION}
+:man source: {cmd}
+:man version: {version}
 :man manual: User Commands
 
 NAME
 ----
 cxl - see XKB layout
 
+// can't use attributes in NAME section, seems like a bug in asciidoc
+// it also could not include comments even in next lines
+
 SYNOPSIS
 --------
-*cxl* [*-d*] [*-l*] [*-n*] [*-D* _display_] [*-h*]
+*{cmd}* [*-d*] [*-l*] [*-n*] [*-D* _display_] [*-h*]
 
 DESCRIPTION
 -----------
-*cxl*(1) is a simple tool for monitoring current XKB layout. It is most useful
+*{cmd}*(1) is a simple tool for monitoring current XKB layout. It is most useful
 for status lines of minimalistic window managers, like *i3*(1) and its
 *i3bar*(1). The printing format of layout could be slightly customized.
 
@@ -35,6 +38,9 @@ can be useful if printing format customization is required.
 
 *-D* _display_::
 Set display name which will be used for connection to the Xorg.
+
+*-v*::
+Output version information and exit.
 
 *-h*::
 Print short usage summary.
