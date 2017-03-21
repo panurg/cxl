@@ -8,30 +8,36 @@
 
 #define DELIMETER ","
 
-typedef void (printer_t)(int grp_num, void *ctxt);
+typedef void (printer_t)(int grp_num, const void *ctxt);
 
-static void literal_prt(int grp_num, void *ctxt)
+static void literal_prt(int grp_num, const void *ctxt)
 {
     fprintf(stdout, "%s\n", ((char**)ctxt)[grp_num]);
 }
 
-static void num_prt(int grp_num, void *ctxt)
+static void num_prt(int grp_num, const void *ctxt)
 {
     fprintf(stdout, "%d\n", grp_num);
 }
 
-static void print_usage()
+static void print_version(const char *cmd)
 {
-    fprintf(stdout, "usage: cxl [options]\n");
+    fprintf(stdout, "%s %s\n", cmd, VERSION);
+}
+
+static void print_usage(const char *cmd)
+{
+    fprintf(stdout, "usage: %s [options]\n", cmd);
     fprintf(stdout, "Options:\n");
     fprintf(stdout, "  -d\t\tPrint current layout and exit (dump).\n");
     fprintf(stdout, "  -l\t\tPrint name of layout (default).\n");
     fprintf(stdout, "  -n\t\tPrint number of layout.\n");
     fprintf(stdout, "  -D display\tSpecify display name to use.\n");
-    fprintf(stdout, "  -h\t\tThis message.\n");
+    fprintf(stdout, "  -v\t\tOutput version information and exit.\n");
+    fprintf(stdout, "  -h\t\tDisplay this message and exit.\n");
 }
 
-static void monitor_events(Display *dpy, printer_t *prt, void *prt_ctxt)
+static void monitor_events(Display *dpy, printer_t *prt, const void *prt_ctxt)
 {
     XkbEvent event;
     if (XkbSelectEventDetails(dpy,
@@ -61,7 +67,7 @@ int main(int argc, char *argv[])
     int opt = 0;
     int dump = 0;
     printer_t *printer = literal_prt;
-    while ((opt = getopt(argc, argv, "dlnD:h")) != -1) {
+    while ((opt = getopt(argc, argv, "dlnD:vh")) != -1) {
         switch (opt) {
         case 'd':
             dump = 1;
@@ -75,11 +81,15 @@ int main(int argc, char *argv[])
         case 'D':
             display_name = optarg;
             break;
+        case 'v':
+            print_version(argv[0]);
+            rc = EXIT_SUCCESS;
+            goto out;
         case 'h':
             rc = EXIT_SUCCESS;
             /* fall through */
         default:
-            print_usage();
+            print_usage(argv[0]);
             goto out;
         }
     }
